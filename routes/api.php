@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\AuthorController;
+use App\Http\Controllers\GenreController;
 
 // Routes untuk Books
 Route::get('/books', [BookController::class, 'index']);
@@ -18,3 +19,10 @@ Route::post('/authors', [AuthorController::class, 'store']);
 Route::get('/authors/{id}', [AuthorController::class, 'show']);
 Route::put('/authors/{id}', [AuthorController::class, 'update']);
 Route::delete('/authors/{id}', [AuthorController::class, 'destroy']);
+
+// Routes untuk Genres
+Route::get('/genres', [GenreController::class, 'index']);
+Route::post('/genres', [GenreController::class, 'store']);
+Route::get('/genres/{id}', [GenreController::class, 'show']);
+Route::put('/genres/{id}', [GenreController::class, 'update']);
+Route::delete('/genres/{id}', [GenreController::class, 'destroy']);

@@ -3,19 +3,24 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Genre;
 
 class GenreController extends Controller
 {
+    // Read All
     public function index()
     {
-        $genres = [
-            ['id' => 1, 'name' => 'Fiksi'],
-            ['id' => 2, 'name' => 'Drama'],
-            ['id' => 3, 'name' => 'Fantasi'],
-            ['id' => 4, 'name' => 'Petualangan'],
-            ['id' => 5, 'name' => 'Misteri'],
-        ];
+        return response()->json(Genre::all(), 200);
+    }
 
-        return response()->json($genres);
+    // Create
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+        ]);
+
+        $genre = Genre::create($validated);
+        return response()->json($genre, 201);
     }
 }
