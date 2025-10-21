@@ -3,49 +3,67 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Models\User;
+use Tymon\JWTAuth\Facades\JWTAuth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
-    /**
-     * LOGIN — Generate JWT token
-     */
-    public function login(Request $request)
+    public function register(Request $request)
     {
-        $credentials = $request->only('email', 'password');
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8',
+            'role' => 'required|in:user,admin',
+        ]);
 
-        // pakai guard jwt (api)
-        if (!$token = Auth::guard('api')->attempt($credentials)) {
-            return response()->json(['message' => 'Invalid email or password'], 401);
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
         }
 
-        // karena guard JWT kadang belum bisa akses factory() di beberapa versi Laravel
-        // kita atur expired time manual (default tymon/jwt-auth = 60 menit)
-        $ttl = config('jwt.ttl', 60);
+        try {
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'role' => $request->role,
+            ]);
 
-        return response()->json([
-            'message' => 'Login successful',
-            'access_token' => $token,
-            'token_type' => 'bearer',
-            'expires_in' => $ttl * 60,
-            'user' => Auth::guard('api')->user(),
+            // Attempt to authenticate the user to generate a token
+            $token = JWTAuth::attempt([
+                'email' => $request->email,
+                'password' => $request->password,
+            ]);
+
+            if (!$token) {
+                return response()->json(['error' => 'Could not generate token'], 500);
+            }
+
+            return response()->json(['token' => $token], 201);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Registration failed: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function login(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|string|email',
+            'password' => 'required|string',
         ]);
-    }
 
-    /**
-     * LOGOUT
-     */
-    public function logout()
-    {
-        Auth::guard('api')->logout();
-        return response()->json(['message' => 'Successfully logged out']);
-    }
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
 
-    /**
-     * GET USER INFO
-     */
-    public function me()
-    {
-        return response()->json(Auth::guard('api')->user());
+        $credentials = $request->only('email', 'password');
+
+        if (!$token = JWTAuth::attempt($credentials)) {
+            return response()->json(['error' => 'Invalid credentials'], 401);
+        }
+
+        return response()->json(['token' => $token]);
     }
 }

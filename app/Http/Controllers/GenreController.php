@@ -2,48 +2,41 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Genre;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 class GenreController extends Controller
 {
-    // Read All (publik)
     public function index()
     {
-        $genres = Genre::all();
-        return response()->json($genres, 200);
+        return response()->json(Genre::all());
     }
 
-    // Show (publik)
     public function show($id)
     {
         $genre = Genre::find($id);
         if (!$genre) {
             return response()->json(['error' => 'Genre not found'], 404);
         }
-        return response()->json($genre, 200);
+        return response()->json($genre);
     }
 
-    // Create (admin)
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
 
-        $genre = Genre::create([
-            'name' => $request->name
-        ]);
-
+        $genre = Genre::create($request->all());
         return response()->json($genre, 201);
     }
 
-    // Update (admin)
     public function update(Request $request, $id)
     {
         $genre = Genre::find($id);
@@ -53,20 +46,17 @@ class GenreController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
 
-        $genre->update([
-            'name' => $request->name
-        ]);
-
-        return response()->json($genre, 200);
+        $genre->update($request->all());
+        return response()->json($genre);
     }
 
-    // Destroy (admin)
     public function destroy($id)
     {
         $genre = Genre::find($id);
@@ -75,6 +65,6 @@ class GenreController extends Controller
         }
 
         $genre->delete();
-        return response()->json(['message' => 'Genre deleted'], 200);
+        return response()->json(['message' => 'Genre deleted']);
     }
 }

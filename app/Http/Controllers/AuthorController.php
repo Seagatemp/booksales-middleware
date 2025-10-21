@@ -2,30 +2,26 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Author;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 class AuthorController extends Controller
 {
-    // Read All (publik)
     public function index()
     {
-        $authors = Author::all();
-        return response()->json($authors, 200);
+        return response()->json(Author::all());
     }
 
-    // Show (publik)
     public function show($id)
     {
         $author = Author::find($id);
         if (!$author) {
             return response()->json(['error' => 'Author not found'], 404);
         }
-        return response()->json($author, 200);
+        return response()->json($author);
     }
 
-    // Create (admin)
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -36,14 +32,10 @@ class AuthorController extends Controller
             return response()->json($validator->errors(), 422);
         }
 
-        $author = Author::create([
-            'name' => $request->name
-        ]);
-
+        $author = Author::create($request->all());
         return response()->json($author, 201);
     }
 
-    // Update (admin)
     public function update(Request $request, $id)
     {
         $author = Author::find($id);
@@ -59,14 +51,10 @@ class AuthorController extends Controller
             return response()->json($validator->errors(), 422);
         }
 
-        $author->update([
-            'name' => $request->name
-        ]);
-
-        return response()->json($author, 200);
+        $author->update($request->all());
+        return response()->json($author);
     }
 
-    // Destroy (admin)
     public function destroy($id)
     {
         $author = Author::find($id);
@@ -75,6 +63,6 @@ class AuthorController extends Controller
         }
 
         $author->delete();
-        return response()->json(['message' => 'Author deleted'], 200);
+        return response()->json(['message' => 'Author deleted']);
     }
 }

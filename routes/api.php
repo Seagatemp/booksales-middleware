@@ -1,36 +1,34 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\GenreController;
-use App\Http\Controllers\BookController;
-use App\Http\Controllers\AuthController;
 
-// Login
-Route::post('login', [AuthController::class, 'login']);
+// Routes untuk Auth (Register dan Login dengan JWT)
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
 
-// Public Routes (bisa diakses semua orang)
-Route::get('/authors', [AuthorController::class, 'index']);
-Route::get('/authors/{id}', [AuthorController::class, 'show']);
-Route::get('/genres', [GenreController::class, 'index']);
-Route::get('/genres/{id}', [GenreController::class, 'show']);
-Route::get('/books', [BookController::class, 'index']);
-Route::get('/books/{id}', [BookController::class, 'show']);
+// Public Routes (accessible tanpa auth)
+Route::group(['prefix' => 'authors'], function () {
+    Route::get('/', [AuthorController::class, 'index']); // Read All
+    Route::get('/{id}', [AuthorController::class, 'show']); // Show
+});
 
-// Admin Routes (hanya admin dengan JWT)
-Route::middleware(['jwt.auth', 'admin'])->group(function () {
+Route::group(['prefix' => 'genres'], function () {
+    Route::get('/', [GenreController::class, 'index']); // Read All
+    Route::get('/{id}', [GenreController::class, 'show']); // Show
+});
+
+// Protected Routes (hanya admin, dengan JWT)
+Route::group(['middleware' => ['jwt.auth', 'admin']], function () {
     // Authors
-    Route::post('/authors', [AuthorController::class, 'store']);
-    Route::put('/authors/{id}', [AuthorController::class, 'update']);
-    Route::delete('/authors/{id}', [AuthorController::class, 'destroy']);
-
+    Route::post('/authors', [AuthorController::class, 'store']); // Create
+    Route::put('/authors/{id}', [AuthorController::class, 'update']); // Update
+    Route::delete('/authors/{id}', [AuthorController::class, 'destroy']); // Destroy
+    
     // Genres
-    Route::post('/genres', [GenreController::class, 'store']);
-    Route::put('/genres/{id}', [GenreController::class, 'update']);
-    Route::delete('/genres/{id}', [GenreController::class, 'destroy']);
-
-    // Books
-    Route::post('/books', [BookController::class, 'store']);
-    Route::put('/books/{id}', [BookController::class, 'update']);
-    Route::delete('/books/{id}', [BookController::class, 'destroy']);
+    Route::post('/genres', [GenreController::class, 'store']); // Create
+    Route::put('/genres/{id}', [GenreController::class, 'update']); // Update
+    Route::delete('/genres/{id}', [GenreController::class, 'destroy']); // Destroy
 });
