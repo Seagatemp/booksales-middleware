@@ -2,67 +2,79 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Author;
 use Illuminate\Http\Request;
+use App\Models\Author;
+use Illuminate\Support\Facades\Validator;
 
 class AuthorController extends Controller
 {
-    // Tampilkan data
+    // Read All (publik)
     public function index()
     {
-        return response()->json(Author::all(), 200);
+        $authors = Author::all();
+        return response()->json($authors, 200);
     }
 
-    // Simpan data
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-        ]);
-
-        $author = Author::create($validated);
-        return response()->json($author, 201);
-    }
-
-    // Tampilkan data berdasarkan ID
+    // Show (publik)
     public function show($id)
     {
         $author = Author::find($id);
-
         if (!$author) {
-            return response()->json(['message' => 'Author tidak ditemukan'], 404);
+            return response()->json(['error' => 'Author not found'], 404);
         }
-
         return response()->json($author, 200);
     }
 
-    // Update data berdasarkan ID
-    public function update(Request $request, $id)
+    // Create (admin)
+    public function store(Request $request)
     {
-        $author = Author::find($id);
-
-        if (!$author) {
-            return response()->json(['message' => 'Author tidak ditemukan'], 404);
-        }
-
-        $validated = $request->validate([
+        $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
         ]);
 
-        $author->update($validated);
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+
+        $author = Author::create([
+            'name' => $request->name
+        ]);
+
+        return response()->json($author, 201);
+    }
+
+    // Update (admin)
+    public function update(Request $request, $id)
+    {
+        $author = Author::find($id);
+        if (!$author) {
+            return response()->json(['error' => 'Author not found'], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+
+        $author->update([
+            'name' => $request->name
+        ]);
+
         return response()->json($author, 200);
     }
 
-    // Hapus data berdasarkan ID
+    // Destroy (admin)
     public function destroy($id)
     {
         $author = Author::find($id);
-
         if (!$author) {
-            return response()->json(['message' => 'Author tidak ditemukan'], 404);
+            return response()->json(['error' => 'Author not found'], 404);
         }
 
         $author->delete();
-        return response()->json(['message' => 'Author berhasil dihapus'], 200);
+        return response()->json(['message' => 'Author deleted'], 200);
     }
 }
